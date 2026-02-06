@@ -1,0 +1,73 @@
+@font-face {
+  font-family: "LibreBaskerville";
+  src: url("./assets/Fonts/LibreBaskerville-Bold.ttf") format("truetype");
+  font-weight: 700;
+  font-style: normal;
+}
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-in {
+  animation: fade-in 0.3s ease-in-out;
+}
+
+.webkit-date-fix {
+  -webkit-appearance: none;
+  -moz-appearance: textfield;
+  min-height: 50px; /* Explicit height to match your text inputs */
+  display: flex; /* Helps vertically center the text */
+  align-items: center;
+}
+
+/* Fix the internal text container height */
+.webkit-date-fix::-webkit-date-and-time-value {
+  min-height: 1.5em;
+  text-align: left; /* Ensures text doesn't center weirdly */
+}
+
+/* Keep these to reset the internal wrapper */
+.webkit-date-fix::-webkit-datetime-edit {
+  display: block;
+  padding: 0;
+  height: auto;
+  line-height: 1;
+}
+
+.webkit-date-fix::-webkit-calendar-picker-indicator {
+  margin-left: auto; /* Pushes icon to the right if you want */
+  margin-right: 10px;
+}
+
+@media print {
+  .no-print,
+  button,
+  nav {
+    display: none !important;
+  }
+
+  body {
+    background: white !important;
+  }
+
+  pre {
+    max-height: none !important;
+    overflow: visible !important;
+    white-space: pre-wrap;
+  }
+
+  * {
+    box-shadow: none !important;
+  }
+}
+

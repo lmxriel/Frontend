@@ -151,7 +151,7 @@ function UserRegistrationPage() {
             <img
               src={PawfectCareLogo}
               alt="Pawfect Care Logo"
-              className="w-10 h-10 sm:w-12 sm:h-12 fill-[#a16f4a] object-contain"
+              className="w-10 h-10 sm:w-12 sm:h-12 fill-current object-contain"
             />
             Pawfect Care
           </div>

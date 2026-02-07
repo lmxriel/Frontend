@@ -147,11 +147,11 @@ function UserRegistrationPage() {
       <div className="relative z-10 w-full max-w-sm sm:max-w-md md:max-w-lg lg:max-w-2xl bg-white shadow-2xl rounded-3xl p-6 sm:p-8 md:p-10 mx-auto">
         {/* Logo */}
         <div className="text-center mb-6 sm:mb-8">
-          <div className="text-3xl sm:text-4xl font-bold text-[#a16f4a] flex items-center justify-center gap-2 sm:gap-3 mb-2">
+          <div className="text-3xl sm:text-4xl font-bold text-[#a16f4a] bg-[#7c5e3b] rounded-full flex items-center justify-center gap-2 sm:gap-3 mb-2">
           <img
             src={PawfectCareLogo}
             alt="Pawfect Care Logo"
-            className="w-10 h-10 sm:w-12 sm:h-12 fill-[#a16f4a] object-contain"
+            className="w-10 h-10 sm:w-12 sm:h-12 filter brightness-0 invert object-contain"
           />
           Pawfect Care
           </div>

@@ -10,7 +10,7 @@ const Footer = () => {
         <div className="text-center mb-12">
           <div className="flex items-center justify-center mb-4">
           <div className="w-12 h-12 fill-white flex items-center justify-center mr-3">
-            <img src={PawfectCareLogo} alt="Pawfect Care Logo" className="h-12 w-auto fill-white" />
+            <img src={PawfectCareLogo} alt="Pawfect Care Logo" className="h-11 w-auto fill-white" />
           </div>
 
             <h3 className="text-3xl font-bold text-white">Pawfect Care</h3>

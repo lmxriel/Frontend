@@ -401,8 +401,8 @@ const TopNavUser = () => {
 
       {/* Notification detail modal */}
       {isNotifModalOpen && selectedNotif && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/40">
-          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-amber-100 p-6 relative transform -translate-x-4">
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/40 p-4 overflow-y-auto">
+          <div className="relative w-[92%] max-w-md bg-white rounded-2xl shadow-2xl border border-amber-100 p-6">
             {/* Close button */}
             <button
               onClick={handleCloseNotifModal}

@@ -5,6 +5,7 @@ import NotificationModal from "../../Components/Modals/NotificationModal";
 import LoadingOverlay from "../../Components/Modals/LoadingOverlay";
 import { useAuth } from "../../Components/ServiceLayer/Context/authContext";
 import AddressAutocomplete from "../../Components/Hooks/AddressAutoComplete/AddressAutoComplete";
+import PawfectCareLogo from "../../assets/User-Page-Image/PawfectCareLogo.svg";
 
 function UserRegistrationPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -147,11 +148,14 @@ function UserRegistrationPage() {
         {/* Logo */}
         <div className="text-center mb-6 sm:mb-8">
           <div className="text-3xl sm:text-4xl font-bold text-[#a16f4a] flex items-center justify-center gap-2 sm:gap-3 mb-2">
-            <span role="img" aria-label="paw" className="text-4xl sm:text-5xl">
-              🐾
-            </span>
-            Pawfect Care
+  <img
+    src={PawfectCareLogo}
+    alt="Pawfect Care Logo"
+    className="w-10 h-10 sm:w-12 sm:h-12 object-contain"
+  />
+  Pawfect Care
           </div>
+
           <p className="text-xs sm:text-sm text-gray-600 mt-2">
             Create your account to get started
           </p>

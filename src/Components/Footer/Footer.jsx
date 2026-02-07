@@ -9,9 +9,10 @@ const Footer = () => {
         {/* Top Section with Logo/Brand */}
         <div className="text-center mb-12">
           <div className="flex items-center justify-center mb-4">
-            <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-3">
-              <PawfectCareLogo className="w-6 h-6 fill-white" />
-            </div>
+          <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center mr-3">
+            <img src={PawfectCareLogo} alt="Pawfect Care Logo" className="w-6 h-6" />
+          </div>
+
             <h3 className="text-3xl font-bold text-white">Pawfect Care</h3>
           </div>
 

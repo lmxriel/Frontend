@@ -246,34 +246,7 @@ function ReportPage() {
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="bg-blue-50 rounded-lg p-3 border border-blue-100">
-                  <div className="flex items-center">
-                    <Calendar className="h-7 w-7 text-blue-600" />
-                    <div className="ml-3">
-                      <p className="text-xs font-medium text-blue-800">
-                        Total Approved Adoptions
-                      </p>
-                      <p className="text-xl font-bold text-blue-900">
-                        {totalAdoptions}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                <div className="bg-green-50 rounded-lg p-3 border border-green-100">
-                  <div className="flex items-center">
-                    <Users className="h-7 w-7 text-green-600" />
-                    <div className="ml-3">
-                      <p className="text-xs font-medium text-green-800">
-                        Adopted Today
-                      </p>
-                      <p className="text-xl font-bold text-green-900">
-                        {todayAdoptions}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
+
             </div>
           </div>
         </div>

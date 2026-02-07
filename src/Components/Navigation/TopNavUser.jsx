@@ -254,7 +254,7 @@ const TopNavUser = () => {
               </button>
 
               {isNotifOpen && (
-                <div className="absolute top-full mt-2 right-1 w-72 max-h-80 overflow-y-auto bg-white border border-amber-200 rounded-2xl shadow-xl text-sm z-[60]">
+                <div className="absolute left-1/2 transform -translate-x-1/2 md:left-auto md:right-0 md:transform-none top-full mt-2 w-80 max-h-80 overflow-y-auto bg-white border border-amber-200 rounded-2xl shadow-xl text-sm z-[60]">
                   <div className="px-4 py-2 border-b border-amber-100 font-semibold text-gray-800 sticky top-0 bg-white rounded-t-2xl">
                     Notifications
                   </div>
@@ -401,8 +401,8 @@ const TopNavUser = () => {
 
       {/* Notification detail modal */}
       {isNotifModalOpen && selectedNotif && (
-        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/40 p-4 overflow-y-auto">
-          <div className="relative w-[92%] max-w-md bg-white rounded-2xl shadow-2xl border border-amber-100 p-6">
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/40">
+          <div className="w-full max-w-md bg-white rounded-2xl shadow-2xl border border-amber-100 p-6 relative transform -translate-x-4">
             {/* Close button */}
             <button
               onClick={handleCloseNotifModal}

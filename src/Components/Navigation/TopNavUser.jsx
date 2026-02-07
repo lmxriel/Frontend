@@ -254,7 +254,7 @@ const TopNavUser = () => {
               </button>
 
               {isNotifOpen && (
-                <div className="absolute top-full mt-2 right-2 w-72 max-h-80 overflow-y-auto bg-white border border-amber-200 rounded-2xl shadow-xl text-sm z-[60]">
+                <div className="absolute top-full mt-2 right-1 w-72 max-h-80 overflow-y-auto bg-white border border-amber-200 rounded-2xl shadow-xl text-sm z-[60]">
                   <div className="px-4 py-2 border-b border-amber-100 font-semibold text-gray-800 sticky top-0 bg-white rounded-t-2xl">
                     Notifications
                   </div>

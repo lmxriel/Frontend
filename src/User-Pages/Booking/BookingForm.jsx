@@ -319,28 +319,26 @@ function BookingForm() {
               <label className="block text-xl font-bold text-gray-900 mb-4">
                 Select Date
               </label>
-              <div className="relative">
-                <input
-                  type="date"
-                  name="date"
-                  value={formData.date}
-                  onChange={handleChange}
-                  min={today}
-                  className={`w-full px-4 py-4 text-lg border-2 rounded-2xl focus:outline-none transition-colors duration-300 ${
-                    errors.date
-                      ? "border-red-300 focus:border-red-500"
-                      : "border-gray-200 focus:border-indigo-500"
-                  }`}
-                />
-                <div className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400">
-                  
-                </div>
-              </div>
+
+              <input
+                type="date"
+                name="date"
+                value={formData.date}
+                onChange={handleChange}
+                min={today}
+                style={{ WebkitAppearance: "none" }}
+                className={`w-full box-border px-4 py-4 text-lg border-2 rounded-2xl bg-white focus:outline-none transition-colors duration-300 ${
+                  errors.date
+                    ? "border-red-300 focus:border-red-500"
+                    : "border-gray-200 focus:border-indigo-500"
+                }`}
+              />
+
               {errors.date && (
                 <p className="text-red-500 text-sm mt-2">{errors.date}</p>
               )}
             </div>
-
+            
             {/* Time Selection */}
             <div>
               <label className="block text-xl font-bold text-gray-900 mb-4">

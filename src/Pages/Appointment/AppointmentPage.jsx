@@ -301,9 +301,10 @@ function AppointmentPage() {
                             hour12: true,
                           })}
                         </td>
-                        <td className="px-6 py-4 text-sm text-gray-700 uppercase tracking-wide">
-                           {appt.appointment_type?.toUpperCase() || ""}
+                        <td className="px-6 py-4 text-sm text-gray-700">
+                          {appt.appointment_type.charAt(0).toUpperCase() + appt.appointment_type.slice(1)}
                         </td>
+
                         <td className="px-6 py-4">
                           {appt.review === "Accepted" && (
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">

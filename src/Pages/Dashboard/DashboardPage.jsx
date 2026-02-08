@@ -141,6 +141,7 @@ function DashboardPage() {
     { label: "Adoptions", path: "/admin/adoption" },
     { label: "Appointments", path: "/admin/appointment" },
     { label: "Messages", path: "/admin/message" },
+    { label: "Reports", path: "/admin/reports" },
   ];
 
   return (

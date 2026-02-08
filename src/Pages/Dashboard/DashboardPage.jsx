@@ -189,7 +189,7 @@ function DashboardPage() {
             <h3 className="text-lg font-semibold text-gray-900 mb-4">
               Quick Actions
             </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               {quickActions.map((action, idx) => (
                 <button
                   key={idx}

@@ -201,19 +201,6 @@ function DashboardPage() {
             </div>
           </div>
         </div>
-
-        {/* Recent Activity Placeholder */}
-        <div className="px-6 pb-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 text-center">
-            <div className="w-12 h-12 bg-gray-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-              📋
-            </div>
-            <h4 className="text-sm font-semibold text-gray-900 mb-1">
-              Recent Activity
-            </h4>
-            <p className="text-sm text-gray-500">No recent activity found</p>
-          </div>
-        </div>
       </div>
     </div>
   );

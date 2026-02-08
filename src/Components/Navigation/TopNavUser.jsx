@@ -274,7 +274,7 @@ const TopNavUser = () => {
                         {n.type === "appointment" ? (
                           <>
                             <p className="font-semibold text-[#7c5e3b]">
-                              Appointment {n.appointment_type.charAt(0).toUpperCase() + n.appointment_type.slice(1)}
+                              Appointment ({n.appointment_type.charAt(0).toUpperCase() + n.appointment_type.slice(1)})
                             </p>
                             <p className="text-gray-700">
                               Date:{" "}
@@ -420,10 +420,13 @@ const TopNavUser = () => {
 
             {selectedNotif.type === "appointment" ? (
               <div className="space-y-2 text-sm">
-                <p>
-                  <span className="font-semibold text-gray-800">Type:</span>{" "}
-                  {selectedNotif.appointment_type}
-                </p>
+              <p>
+                <span className="font-semibold text-gray-800">Type:</span>{" "}
+                {selectedNotif.appointment_type &&
+                  selectedNotif.appointment_type.charAt(0).toUpperCase() +
+                    selectedNotif.appointment_type.slice(1)}
+              </p>
+
                 <p>
                   <span className="font-semibold text-gray-800">
                     Date & Time:

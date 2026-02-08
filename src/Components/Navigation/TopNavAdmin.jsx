@@ -38,14 +38,23 @@ function TopNavAdmin({ handleSignOut }) {
           </div>
 
           {/* Sign Out Button */}
-          <button
-            onClick={handleSignOut}
-            className="px-6 py-2.5 bg-red-600 text-white text-sm font-semibold rounded-lg 
-                     shadow-sm hover:bg-red-700 hover:shadow-md transition-all duration-200 
-                     active:scale-95 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-          >
-            Sign Out
-          </button>
+            <button
+              onClick={handleSignOut}
+              className="
+                px-6 py-2.5
+                rounded-full
+                border-2 border-black
+                text-black text-sm font-semibold
+                bg-transparent
+                hover:bg-black hover:text-white
+                transition-all duration-200
+                active:scale-95
+                focus:outline-none focus:ring-2 focus:ring-black focus:ring-offset-2
+              "
+            >
+              Sign Out
+            </button>
+
         </div>
       </div>
 

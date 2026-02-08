@@ -184,24 +184,18 @@ function DashboardPage() {
         </div>
 
         {/* Quick Actions */}
-        <div className="px-6 pb-8">
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Quick Actions
-            </h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-              {quickActions.map((action, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => navigate(action.path)}
-                  className="w-full h-12 bg-[#560705] text-white rounded-lg font-medium text-sm hover:bg-[#703736] hover:shadow-md transition-all flex items-center justify-center"
-                >
-                  {action.label}
-                </button>
-              ))}
-            </div>
+          <div className="flex gap-4">
+            {quickActions.map((action, idx) => (
+              <button
+                key={idx}
+                onClick={() => navigate(action.path)}
+                className="flex-1 h-12 bg-[#560705] text-white rounded-lg font-medium text-sm hover:bg-[#703736] hover:shadow-md transition-all flex items-center justify-center"
+              >
+                {action.label}
+              </button>
+            ))}
           </div>
-        </div>
+
       </div>
     </div>
   );

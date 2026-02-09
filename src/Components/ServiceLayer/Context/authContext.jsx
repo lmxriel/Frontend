@@ -50,7 +50,6 @@ export const AuthProvider = ({ children }) => {
           setUser(userRes.data);
         }
       } catch (refreshErr) {
-        console.log("Silent refresh failed - require login");
         if (!cancelled) {
           setToken(null);
           setUser(null);

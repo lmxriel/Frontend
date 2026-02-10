@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios from "axios"; // to make HTTP requests from the frontend (React) to a backend
 
 const apiClient = axios.create({
   baseURL: "https://backend-ul9i.onrender.com", // or your API base

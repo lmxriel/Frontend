@@ -368,7 +368,7 @@ function UserRegistrationPage() {
                   onClick={() => setShowTermsModal(true)}
                   className="text-[#a16f4a] font-semibold underline"
                 >
-                  Terms & Agreement
+                  Data Privacy Agreement
                 </button>
               </label>
             </div>
@@ -416,7 +416,7 @@ function UserRegistrationPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[80vh] overflow-y-auto p-6 md:p-8 shadow-xl">
             <h2 className="text-2xl font-semibold text-amber-900 mb-2 text-center">
-              Pawfect Care — Terms & Agreement
+              Pawfect Care — Data Privacy Agreement
             </h2>
 
             <p className="text-center text-xs text-gray-500 mb-4">
@@ -428,7 +428,7 @@ function UserRegistrationPage() {
               <p>
                 By creating an account or using the Pawfect Care: Web-Based Pet
                 Adoption and Pet Care Management System, you agree to the
-                following Terms and Privacy Guidelines. Please read them
+                following Data Privacy Guidelines. Please read them
                 carefully.
               </p>
 

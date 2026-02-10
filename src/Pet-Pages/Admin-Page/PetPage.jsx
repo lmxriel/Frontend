@@ -7,6 +7,8 @@ import { useAuth } from "../../Components/ServiceLayer/Context/authContext";
 import NotificationModal from "../../Components/Modals/NotificationModal";
 
 function PetPage() {
+
+  // declare variables 
   const navigate = useNavigate();
   const [pets, setPets] = useState([]);
   const [showForm, setShowForm] = useState(false);
@@ -57,6 +59,7 @@ function PetPage() {
     }
   };
 
+  // take the info form, send to the server, refresh the pets list, close the form, show a success message, and handle errors if anything goes wrong
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);

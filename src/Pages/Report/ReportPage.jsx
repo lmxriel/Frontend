@@ -3,16 +3,16 @@ import { useNavigate } from "react-router-dom";
 import { Loader2, Download, Calendar, Users } from "lucide-react";
 import TopNavAdmin from "../../Components/Navigation/TopNavAdmin";
 import LoadingModal from "../../Components/Modals/LoadingModal";
-import { useAuth } from "../../Components/ServiceLayer/Context/authContext";
+import { useAuth } from "../../Components/ServiceLayer/Context/authContext"; // custom hook for authentication/context
 
-import jsPDF from "jspdf";
+import jsPDF from "jspdf"; // lets you generate PDF reports from the data
 import autoTable from "jspdf-autotable";
 import logo from "../../assets/Admin-Page-Image/OVSLogo.png";
 
 function ReportPage() {
   const navigate = useNavigate();
-  const [adoptionReports, setAdoptionReports] = useState([]);
-  const [appointmentReports, setAppointmentReports] = useState([]);
+  const [adoptionReports, setAdoptionReports] = useState([]); // useState to keep track of data that can change, stores all adoption report data fetched from the backend.
+  const [appointmentReports, setAppointmentReports] = useState([]); // stores all appointment report data fetched from the backend
 
   const [loadingPage, setLoadingPage] = useState(true);
 
@@ -25,8 +25,9 @@ function ReportPage() {
     to: "",
   });
 
-  const { apiClient, token, logout } = useAuth();
+  const { apiClient, token, logout } = useAuth(); // custom Axios instance to make HTTP requests to the backend
 
+  // fetches adoption reports from the backend for the admin page
   const fetchAdoptionReports = async () => {
     try {
       setLoadingPage(true);
@@ -49,6 +50,7 @@ function ReportPage() {
     }
   };
 
+  // fetches all approved appointment reports from the backend
   const fetchAppointmentReports = async () => {
     try {
       setLoadingPage(true);
@@ -71,43 +73,45 @@ function ReportPage() {
     }
   };
 
-  useEffect(() => {
-    if (!token) return;
-    Promise.all([fetchAdoptionReports(), fetchAppointmentReports()]);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token]);
+      // all the adoption data fetched from the backend.
+      useEffect(() => {
+        if (!token) return;
+        Promise.all([fetchAdoptionReports(), fetchAppointmentReports()]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+      }, [token]);
+      
+      // all the adoption data fetched from the backend.
+      const filteredAdoptions = adoptionReports.filter((report) => {
+        const fullName = `${report.adopter_first_name || ""} ${
+          report.adopter_last_name || ""
+        }`.toLowerCase();
+        const petName = (report.pet_name || "").toLowerCase();
+        const petBreed = (report.pet_breed || "").toLowerCase();
+        const petType = (report.pet_type || "").toLowerCase();
+        const status = (report.status || "").toLowerCase();
+        const query = adoptionSearch.toLowerCase();
 
-  const filteredAdoptions = adoptionReports.filter((report) => {
-    const fullName = `${report.adopter_first_name || ""} ${
-      report.adopter_last_name || ""
-    }`.toLowerCase();
-    const petName = (report.pet_name || "").toLowerCase();
-    const petBreed = (report.pet_breed || "").toLowerCase();
-    const petType = (report.pet_type || "").toLowerCase();
-    const status = (report.status || "").toLowerCase();
-    const query = adoptionSearch.toLowerCase();
+        return (
+          fullName.includes(query) ||
+          petName.includes(query) ||
+          petBreed.includes(query) ||
+          petType.includes(query) ||
+          status.includes(query)
+        );
+      });
 
-    return (
-      fullName.includes(query) ||
-      petName.includes(query) ||
-      petBreed.includes(query) ||
-      petType.includes(query) ||
-      status.includes(query)
-    );
-  });
+        const filteredAppointments = appointmentReports.filter((a) => {
+          const fullName = `${a.first_name || ""} ${a.last_name || ""}`.toLowerCase();
+          const service = (a.appointment_type || "").toLowerCase();
+          const status = (a.status || "").toLowerCase();
+          const query = appointmentSearch.toLowerCase();
 
-  const filteredAppointments = appointmentReports.filter((a) => {
-    const fullName = `${a.first_name || ""} ${a.last_name || ""}`.toLowerCase();
-    const service = (a.appointment_type || "").toLowerCase();
-    const status = (a.status || "").toLowerCase();
-    const query = appointmentSearch.toLowerCase();
-
-    return (
-      fullName.includes(query) ||
-      service.includes(query) ||
-      status.includes(query)
-    );
-  });
+          return (
+            fullName.includes(query) ||
+            service.includes(query) ||
+            status.includes(query)
+          );
+        });
 
   const totalAdoptions = adoptionReports.length;
   const todayAdoptions = adoptionReports.filter(

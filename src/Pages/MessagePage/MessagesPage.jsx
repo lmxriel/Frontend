@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from "react";
 import { Loader2 } from "lucide-react";
 import TopNavAdmin from "../../Components/Navigation/TopNavAdmin";
 import { useAuth } from "../../Components/ServiceLayer/Context/authContext";
-import { socket } from "../../Components/Hooks/socket";
+import { socket } from "../../Components/Hooks/socket"; // socket connection
 
 const TYPING_TIMEOUT_MS = 2000;
 let adminTypingTimeout = null;
@@ -69,13 +69,14 @@ function MessagesPage() {
     setSelectedConversation(conv);
     fetchMessages(conv.conversation_id);
 
-    socket.emit("join_conversation", conv.conversation_id);
-
+    socket.emit("join_conversation", conv.conversation_id); // admin opens a chat, frontend tells backend
+ 
     socket.off("new_message");
     socket.off("typing");
     socket.off("stop_typing");
 
-    socket.on("new_message", (msg) => {
+    // backend sends new message, frontend receives it instantly
+    socket.on("new_message", (msg) => { 
       if (msg.conversation_id !== conv.conversation_id) return;
       setMessages((prev) => {
         const exists = prev.some((m) => m.message_id === msg.message_id);
@@ -84,6 +85,7 @@ function MessagesPage() {
       });
     });
 
+    // User is typing, backend broadcasts it, ui will show it 
     socket.on("typing", (data) => {
       if (data.conversationId !== conv.conversation_id) return;
       if (data.sender_role === "pet owner") {
@@ -108,6 +110,7 @@ function MessagesPage() {
     });
   };
 
+  // VERY IMPORTANT. Prevents duplicate messages. Prevents message appears twice bugs.
   useEffect(() => {
     return () => {
       socket.off("new_message");

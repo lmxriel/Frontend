@@ -7,7 +7,7 @@ import {
   AdoptionRequestRoute,
   AppointmentPageRoute,
   MessagesPageRoute,
-  ReportPageRoute,
+  ReportPageRoute
 } from "./Routes/AdminRoutes/AdminRoutes";
 import {
   UserLoginRoute,
@@ -16,7 +16,7 @@ import {
   UserAdoptionFormRoute,
   UserForgotPasswordRoute,
   UserMainRoute,
-  UserAccountPageRoute,
+  UserAccountPageRoute
 } from "./Routes/UserRoutes/UserRoutes";
 import { PetRoute } from "./Routes/PetRoutes/PetRoutes";
 
@@ -33,7 +33,7 @@ const routers = createBrowserRouter([
   UserForgotPasswordRoute,
   UserAdoptionFormRoute,
   ReportPageRoute,
-  UserAccountPageRoute,
+  UserAccountPageRoute
 ]);
 
 function App() {

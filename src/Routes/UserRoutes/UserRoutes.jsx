@@ -6,7 +6,7 @@ import BookingPage from "../../User-Pages/Booking/BookingPage";
 import BookingFormPage from "../../User-Pages/Booking/BookingForm";
 import AdoptionFormPage from "../../User-Pages/Adoption/AdoptionForm";
 import ForgotPasswordPage from "../../User-Pages/ForgotPassword/ForgotPassword";
-
+import AccountPage from "../../User-Pages/Account/AccountPage";
 import PageTransition from "../../Components/PageTransition/PageTransition";
 import UserLayout from "../../Components/PageTransition/UserLayout";
 
@@ -62,6 +62,14 @@ const UserForgotPasswordRoute = {
   element: (
     <PageTransition>
       <ForgotPasswordPage />
+    </PageTransition>
+  ),
+};
+const UserAccountPageRoute = {
+  path: "/user/account",
+  element: (
+    <PageTransition>
+      <AccountPage />
     </PageTransition>
   ),
 };

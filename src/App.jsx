@@ -16,6 +16,7 @@ import {
   UserAdoptionFormRoute,
   UserForgotPasswordRoute,
   UserMainRoute,
+  UserAccountPageRoute,
 } from "./Routes/UserRoutes/UserRoutes";
 import { PetRoute } from "./Routes/PetRoutes/PetRoutes";
 
@@ -32,6 +33,7 @@ const routers = createBrowserRouter([
   UserForgotPasswordRoute,
   UserAdoptionFormRoute,
   ReportPageRoute,
+  UserAccountPageRoute,
 ]);
 
 function App() {

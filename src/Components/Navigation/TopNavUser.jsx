@@ -274,13 +274,16 @@ const TopNavUser = () => {
                         {n.type === "appointment" ? (
                           <>
                             <p className="font-semibold text-[#7c5e3b]">
-                              Appointment ({n.appointment_type.charAt(0).toUpperCase() + n.appointment_type.slice(1)})
+                              Appointment (
+                              {n.appointment_type.charAt(0).toUpperCase() +
+                                n.appointment_type.slice(1)}
+                              )
                             </p>
                             <p className="text-gray-700">
                               Date:{" "}
                               {formatDateTime(
                                 n.appointment_date,
-                                n.timeSchedule
+                                n.timeSchedule,
                               )}
                             </p>
                             <p className="text-xs text-amber-700">
@@ -331,9 +334,7 @@ const TopNavUser = () => {
                   <div className="p-4 bg-amber-50 border-b border-amber-100">
                     <p className="font-semibold text-gray-900">
                       {formatName(
-                        `${user?.first_name || "Guest"} ${
-                          user?.last_name || ""
-                        }`
+                        `${user?.first_name || "Guest"} ${user?.last_name || ""}`,
                       )}
                     </p>
                     <p className="text-sm text-gray-600">{user?.email}</p>
@@ -372,6 +373,16 @@ const TopNavUser = () => {
                     Book
                   </button>
                 </nav>
+
+                {/* New Account button */}
+                {!isGuest && (
+                  <button
+                    onClick={() => delayedNavigate("/user/account")}
+                    className="w-full px-4 py-3 text-left text-[#7c5e3b] font-semibold hover:bg-amber-50 border-t border-amber-100"
+                  >
+                    My Account
+                  </button>
+                )}
 
                 {isGuest ? (
                   <button
@@ -420,12 +431,12 @@ const TopNavUser = () => {
 
             {selectedNotif.type === "appointment" ? (
               <div className="space-y-2 text-sm">
-              <p>
-                <span className="font-semibold text-gray-800">Type:</span>{" "}
-                {selectedNotif.appointment_type &&
-                  selectedNotif.appointment_type.charAt(0).toUpperCase() +
-                    selectedNotif.appointment_type.slice(1)}
-              </p>
+                <p>
+                  <span className="font-semibold text-gray-800">Type:</span>{" "}
+                  {selectedNotif.appointment_type &&
+                    selectedNotif.appointment_type.charAt(0).toUpperCase() +
+                      selectedNotif.appointment_type.slice(1)}
+                </p>
 
                 <p>
                   <span className="font-semibold text-gray-800">
@@ -433,7 +444,7 @@ const TopNavUser = () => {
                   </span>{" "}
                   {formatDateTime(
                     selectedNotif.appointment_date,
-                    selectedNotif.timeSchedule
+                    selectedNotif.timeSchedule,
                   )}
                 </p>
                 <p>

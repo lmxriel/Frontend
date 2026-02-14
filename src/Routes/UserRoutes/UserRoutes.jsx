@@ -99,4 +99,5 @@ export {
   UserForgotPasswordRoute,
   UserBookingFormRoute,
   UserAdoptionFormRoute,
+  UserAccountPageRoute
 };

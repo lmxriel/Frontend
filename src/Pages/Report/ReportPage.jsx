@@ -342,7 +342,9 @@ function ReportPage() {
               Appointment Reports
             </h3>
           </div>
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-3 p-4 flex flex-col sm:flex-row gap-2">
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-3 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+
+            {/* Left - Search */}
             <input
               type="text"
               placeholder="Search by owner, service, status..."
@@ -350,37 +352,51 @@ function ReportPage() {
               onChange={(e) => setAppointmentSearch(e.target.value)}
               className="w-full sm:w-64 px-4 py-2.5 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             />
-            <input
-              type="date"
-              value={appointmentRange.from}
-              onChange={(e) =>
-                setAppointmentRange({
-                  ...appointmentRange,
-                  from: e.target.value,
-                })
-              }
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
-            />
-            <input
-              type="date"
-              value={appointmentRange.to}
-              onChange={(e) =>
-                setAppointmentRange({ ...appointmentRange, to: e.target.value })
-              }
-              className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
-            />
-            <button
-              onClick={fetchAppointmentReports}
-              className="px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              Filter
-            </button>
-            <button
-              onClick={handleExportAppointments}
-              className="px-4 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 flex items-center"
-            >
-              <Download className="h-4 w-4 mr-1" /> Export
-            </button>
+
+            {/* Right - Date + Filter + Export */}
+            <div className="flex flex-wrap sm:flex-nowrap gap-2 sm:ml-auto">
+
+              <input
+                type="date"
+                value={appointmentRange.from}
+                onChange={(e) =>
+                  setAppointmentRange({
+                    ...appointmentRange,
+                    from: e.target.value,
+                  })
+                }
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              />
+
+              <input
+                type="date"
+                value={appointmentRange.to}
+                onChange={(e) =>
+                  setAppointmentRange({
+                    ...appointmentRange,
+                    to: e.target.value,
+                  })
+                }
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              />
+
+              <button
+                onClick={fetchAppointmentReports}
+                className="px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Filter
+              </button>
+
+              <button
+                onClick={handleExportAppointments}
+                className="px-4 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 flex items-center"
+              >
+                <Download className="h-4 w-4 mr-1" />
+                Export
+              </button>
+
+            </div>
+
           </div>
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-auto max-h-[300px]">
             <table className="w-full">

@@ -93,7 +93,8 @@ function ReportPage() {
 
   const filteredAppointments = appointmentReports.filter((a) => {
     const fullName = `${a.first_name || ""} ${a.last_name || ""}`.toLowerCase();
-    const service = (a.appointment_type || "").toLowerCase();
+   const serviceRaw = (a.appointment_type || "").toLowerCase();
+    const service = serviceRaw.charAt(0).toUpperCase() + serviceRaw.slice(1);
     const status = (a.status || "").toLowerCase();
     const query = appointmentSearch.toLowerCase();
 

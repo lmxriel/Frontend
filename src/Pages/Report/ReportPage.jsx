@@ -13,7 +13,6 @@ function ReportPage() {
   const navigate = useNavigate();
   const [adoptionReports, setAdoptionReports] = useState([]);
   const [appointmentReports, setAppointmentReports] = useState([]);
-
   const [loadingPage, setLoadingPage] = useState(true);
 
   const [adoptionSearch, setAdoptionSearch] = useState("");
@@ -24,6 +23,9 @@ function ReportPage() {
     from: "",
     to: "",
   });
+
+  const [adoptionStatusFilter, setAdoptionStatusFilter] = useState("All");
+  const [appointmentStatusFilter, setAppointmentStatusFilter] = useState("All");
 
   const { apiClient, token, logout } = useAuth();
 
@@ -80,29 +82,39 @@ function ReportPage() {
     const reason = (report.reasons || "").toLowerCase();
     const query = adoptionSearch.toLowerCase();
 
-    return (
+    const matchesSearch =
       fullName.includes(query) ||
       petName.includes(query) ||
       petBreed.includes(query) ||
       petType.includes(query) ||
       status.includes(query) ||
       purpose.includes(query) ||
-      reason.includes(query)
-    );
+      reason.includes(query);
+
+    const matchesStatus =
+      adoptionStatusFilter === "All" ||
+      (report.status || "").toLowerCase() ===
+        adoptionStatusFilter.toLowerCase();
+
+    return matchesSearch && matchesStatus;
   });
 
   const filteredAppointments = appointmentReports.filter((a) => {
     const fullName = `${a.first_name || ""} ${a.last_name || ""}`.toLowerCase();
-   const serviceRaw = (a.appointment_type || "").toLowerCase();
-    const service = serviceRaw.charAt(0).toUpperCase() + serviceRaw.slice(1);
+    const service = (a.appointment_type || "").toLowerCase();
     const status = (a.status || "").toLowerCase();
     const query = appointmentSearch.toLowerCase();
 
-    return (
+    const matchesSearch =
       fullName.includes(query) ||
       service.includes(query) ||
-      status.includes(query)
-    );
+      status.includes(query);
+
+    const matchesStatus =
+      appointmentStatusFilter === "All" ||
+      (a.status || "").toLowerCase() === appointmentStatusFilter.toLowerCase();
+
+    return matchesSearch && matchesStatus;
   });
 
   const addPdfHeader = (doc, title) => {
@@ -121,9 +133,20 @@ function ReportPage() {
     doc.text(title, 105, 34, { align: "center" });
   };
 
+  const formatDate = (val) =>
+    val
+      ? new Date(val).toLocaleDateString("en-US", {
+          month: "short",
+          day: "numeric",
+          year: "numeric",
+        })
+      : "N/A";
+
   const handleExportAdoptions = () => {
     const doc = new jsPDF("p", "mm", "a4");
-    addPdfHeader(doc, "Adoption Report");
+    const filterLabel =
+      adoptionStatusFilter !== "All" ? ` (${adoptionStatusFilter})` : "";
+    addPdfHeader(doc, `Adoption Report${filterLabel}`);
 
     const columns = [
       "Adopter Name",
@@ -132,6 +155,8 @@ function ReportPage() {
       "Pet Type",
       "Reason",
       "Purpose",
+      "Date Requested",
+      "Date Adopted",
       "Status",
     ];
     const rows = filteredAdoptions.map((r) => [
@@ -142,6 +167,8 @@ function ReportPage() {
       r.pet_type || "N/A",
       r.reasons || "N/A",
       r.purpose_of_adoption || "N/A",
+      formatDate(r.dateRequested),
+      formatDate(r.dateAdopted),
       r.status || "Approved",
     ]);
 
@@ -149,26 +176,22 @@ function ReportPage() {
       head: [columns],
       body: rows,
       startY: 40,
-      styles: { fontSize: 9 },
+      styles: { fontSize: 8 },
     });
     doc.save("adoption-report.pdf");
   };
 
   const handleExportAppointments = () => {
     const doc = new jsPDF("p", "mm", "a4");
-    addPdfHeader(doc, "Appointment Report");
+    const filterLabel =
+      appointmentStatusFilter !== "All" ? ` (${appointmentStatusFilter})` : "";
+    addPdfHeader(doc, `Appointment Report${filterLabel}`);
 
     const columns = ["Owner Name", "Service", "Date", "Time", "Status"];
     const rows = filteredAppointments.map((a) => [
       `${a.first_name || ""} ${a.last_name || ""}`.trim(),
       a.appointment_type || "N/A",
-      a.appointment_date
-        ? new Date(a.appointment_date).toLocaleDateString("en-US", {
-            month: "short",
-            day: "numeric",
-            year: "numeric",
-          })
-        : "N/A",
+      formatDate(a.appointment_date),
       a.timeSchedule
         ? new Date(`1970-01-01T${a.timeSchedule}`).toLocaleTimeString("en-US", {
             hour: "2-digit",
@@ -188,9 +211,39 @@ function ReportPage() {
     doc.save("appointment-report.pdf");
   };
 
+  const StatusFilterButtons = ({ value, onChange, options }) => (
+    <div className="flex gap-1">
+      {options.map((opt) => (
+        <button
+          key={opt}
+          onClick={() => onChange(opt)}
+          className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+            value === opt
+              ? opt === "Approved" || opt === "Accepted"
+                ? "bg-green-600 text-white"
+                : opt === "Rejected"
+                  ? "bg-red-600 text-white"
+                  : "bg-blue-600 text-white"
+              : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+          }`}
+        >
+          {opt}
+        </button>
+      ))}
+    </div>
+  );
+
+  const getStatusBadge = (status) => {
+    const s = (status || "").toLowerCase();
+    if (s === "approved" || s === "accepted")
+      return "bg-green-100 text-green-800";
+    if (s === "rejected") return "bg-red-100 text-red-800";
+    return "bg-gray-100 text-gray-700";
+  };
+
   if (loadingPage) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 transition-opacity duration-300">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
         <div className="flex flex-col items-center gap-6 p-8 animate-pulse">
           <div className="w-20 h-20 bg-blue-500/20 rounded-2xl flex items-center justify-center mb-4">
             <Loader2 className="h-16 w-16 text-blue-500 animate-spin drop-shadow-md" />
@@ -224,86 +277,96 @@ function ReportPage() {
           </div>
         </div>
 
-        {/* Adoption Reports */}
+        {/* ── Adoption Reports ── */}
         <div className="px-6 pb-6">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-lg font-semibold text-gray-900">
               Adoption Reports
             </h3>
           </div>
+
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-3 p-4">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-2">
               <input
                 type="text"
                 placeholder="Search by adopter, pet, reason, purpose, status..."
                 value={adoptionSearch}
                 onChange={(e) => setAdoptionSearch(e.target.value)}
-                className="w-full sm:w-64 px-4 py-2.5 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className="w-64 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               />
-              <div className="flex gap-2">
-                <input
-                  type="date"
-                  value={adoptionRange.from}
-                  onChange={(e) =>
-                    setAdoptionRange({ ...adoptionRange, from: e.target.value })
-                  }
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+
+              {/* Status filter — between search and date pickers */}
+              <div className="flex items-center gap-1">
+                <span className="text-sm text-gray-500 font-medium">
+                  Status:
+                </span>
+                <StatusFilterButtons
+                  value={adoptionStatusFilter}
+                  onChange={setAdoptionStatusFilter}
+                  options={["All", "Approved", "Rejected"]}
                 />
-                <input
-                  type="date"
-                  value={adoptionRange.to}
-                  onChange={(e) =>
-                    setAdoptionRange({ ...adoptionRange, to: e.target.value })
-                  }
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                />
-                <button
-                  onClick={fetchAdoptionReports}
-                  className="px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-                >
-                  Filter
-                </button>
-                <button
-                  onClick={handleExportAdoptions}
-                  className="px-4 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 flex items-center"
-                >
-                  <Download className="h-4 w-4 mr-1" /> Export
-                </button>
               </div>
+
+              <input
+                type="date"
+                value={adoptionRange.from}
+                onChange={(e) =>
+                  setAdoptionRange({ ...adoptionRange, from: e.target.value })
+                }
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              />
+              <input
+                type="date"
+                value={adoptionRange.to}
+                onChange={(e) =>
+                  setAdoptionRange({ ...adoptionRange, to: e.target.value })
+                }
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              />
+              <button
+                onClick={fetchAdoptionReports}
+                className="px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+              >
+                Filter
+              </button>
+              <button
+                onClick={handleExportAdoptions}
+                className="px-4 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 flex items-center text-sm"
+              >
+                <Download className="h-4 w-4 mr-1" /> Export
+              </button>
             </div>
           </div>
+
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-auto max-h-[300px]">
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">
-                    Adopter Name
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">
-                    Pet Name
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">
-                    Pet Breed
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">
-                    Pet Type
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">
-                    Reason
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">
-                    Purpose
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">
-                    Status
-                  </th>
+                  {[
+                    "Adopter Name",
+                    "Pet Name",
+                    "Pet Breed",
+                    "Pet Type",
+                    "Reason",
+                    "Purpose",
+                    "Date Requested",
+                    "Date Adopted",
+                    "Status",
+                  ].map((h) => (
+                    <th
+                      key={h}
+                      className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase whitespace-nowrap"
+                    >
+                      {h}
+                    </th>
+                  ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {filteredAdoptions.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={9}
                       className="px-6 py-12 text-center text-gray-500"
                     >
                       No adoption records found.
@@ -323,8 +386,16 @@ function ReportPage() {
                       <td className="px-6 py-2">
                         {report.purpose_of_adoption || "N/A"}
                       </td>
+                      <td className="px-6 py-2 whitespace-nowrap">
+                        {formatDate(report.dateRequested)}
+                      </td>
+                      <td className="px-6 py-2 whitespace-nowrap">
+                        {formatDate(report.dateAdopted)}
+                      </td>
                       <td className="px-6 py-2">
-                        <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        <span
+                          className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(report.status)}`}
+                        >
                           {report.status || "Approved"}
                         </span>
                       </td>
@@ -336,26 +407,35 @@ function ReportPage() {
           </div>
         </div>
 
-        {/* Appointment Reports */}
+        {/* ── Appointment Reports ── */}
         <div className="px-6 pb-8">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-lg font-semibold text-gray-900">
               Appointment Reports
             </h3>
           </div>
-            <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-3 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
 
-            {/* Left - Search */}
-            <input
-              type="text"
-              placeholder="Search by owner, service, status..."
-              value={appointmentSearch}
-              onChange={(e) => setAppointmentSearch(e.target.value)}
-              className="w-full sm:w-64 px-4 py-2.5 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-            />
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-3 p-4">
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                type="text"
+                placeholder="Search by owner, service, status..."
+                value={appointmentSearch}
+                onChange={(e) => setAppointmentSearch(e.target.value)}
+                className="w-64 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              />
 
-            {/* Right - Date + Filter + Export */}
-            <div className="flex flex-wrap sm:flex-nowrap gap-2 sm:ml-auto">
+              {/* Status filter — between search and date pickers */}
+              <div className="flex items-center gap-1">
+                <span className="text-sm text-gray-500 font-medium">
+                  Status:
+                </span>
+                <StatusFilterButtons
+                  value={appointmentStatusFilter}
+                  onChange={setAppointmentStatusFilter}
+                  options={["All", "Accepted", "Rejected"]}
+                />
+              </div>
 
               <input
                 type="date"
@@ -368,7 +448,6 @@ function ReportPage() {
                 }
                 className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
               />
-
               <input
                 type="date"
                 value={appointmentRange.to}
@@ -380,44 +459,35 @@ function ReportPage() {
                 }
                 className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
               />
-
               <button
                 onClick={fetchAppointmentReports}
-                className="px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+                className="px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
               >
                 Filter
               </button>
-
               <button
                 onClick={handleExportAppointments}
-                className="px-4 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 flex items-center"
+                className="px-4 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 flex items-center text-sm"
               >
-                <Download className="h-4 w-4 mr-1" />
-                Export
+                <Download className="h-4 w-4 mr-1" /> Export
               </button>
-
             </div>
-
           </div>
+
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-auto max-h-[300px]">
             <table className="w-full">
               <thead className="bg-gray-50 border-b border-gray-200">
                 <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">
-                    Owner Name
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">
-                    Service
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">
-                    Date
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">
-                    Time
-                  </th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase">
-                    Status
-                  </th>
+                  {["Owner Name", "Service", "Date", "Time", "Status"].map(
+                    (h) => (
+                      <th
+                        key={h}
+                        className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase whitespace-nowrap"
+                      >
+                        {h}
+                      </th>
+                    ),
+                  )}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
@@ -435,19 +505,10 @@ function ReportPage() {
                     <tr key={appt.appointment_id} className="hover:bg-gray-50">
                       <td className="px-6 py-2">{`${appt.first_name || ""} ${appt.last_name || ""}`}</td>
                       <td className="px-6 py-2">{appt.appointment_type}</td>
-                      <td className="px-6 py-2">
-                        {appt.appointment_date
-                          ? new Date(appt.appointment_date).toLocaleDateString(
-                              "en-US",
-                              {
-                                month: "short",
-                                day: "numeric",
-                                year: "numeric",
-                              },
-                            )
-                          : "N/A"}
+                      <td className="px-6 py-2 whitespace-nowrap">
+                        {formatDate(appt.appointment_date)}
                       </td>
-                      <td className="px-6 py-2">
+                      <td className="px-6 py-2 whitespace-nowrap">
                         {appt.timeSchedule
                           ? new Date(
                               `1970-01-01T${appt.timeSchedule}`,
@@ -459,7 +520,9 @@ function ReportPage() {
                           : "N/A"}
                       </td>
                       <td className="px-6 py-2">
-                        <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                        <span
+                          className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusBadge(appt.status)}`}
+                        >
                           {appt.status || "Accepted"}
                         </span>
                       </td>

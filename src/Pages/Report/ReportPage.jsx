@@ -286,9 +286,7 @@ function ReportPage() {
           </div>
 
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-3 p-4">
-            <div className="flex flex-wrap items-center gap-3">
-
-              {/* Search */}
+            <div className="flex flex-wrap items-center gap-2">
               <input
                 type="text"
                 placeholder="Search by adopter, pet, reason, purpose, status..."
@@ -297,9 +295,11 @@ function ReportPage() {
                 className="w-64 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               />
 
-              {/* Status */}
-              <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-500 font-medium">Status:</span>
+              {/* Status filter — between search and date pickers */}
+              <div className="flex items-center gap-1">
+                <span className="text-sm text-gray-500 font-medium">
+                  Status:
+                </span>
                 <StatusFilterButtons
                   value={adoptionStatusFilter}
                   onChange={setAdoptionStatusFilter}
@@ -307,43 +307,34 @@ function ReportPage() {
                 />
               </div>
 
-              {/* Date + Buttons (kept LEFT) */}
-              <div className="flex flex-wrap items-center gap-2">
-
-                <input
-                  type="date"
-                  value={adoptionRange.from}
-                  onChange={(e) =>
-                    setAdoptionRange({ ...adoptionRange, from: e.target.value })
-                  }
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                />
-
-                <input
-                  type="date"
-                  value={adoptionRange.to}
-                  onChange={(e) =>
-                    setAdoptionRange({ ...adoptionRange, to: e.target.value })
-                  }
-                  className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
-                />
-
-                <button
-                  onClick={fetchAdoptionReports}
-                  className="px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
-                >
-                  Filter
-                </button>
-
-                <button
-                  onClick={handleExportAdoptions}
-                  className="px-4 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 flex items-center text-sm"
-                >
-                  <Download className="h-4 w-4 mr-1" />
-                  Export
-                </button>
-
-              </div>
+              <input
+                type="date"
+                value={adoptionRange.from}
+                onChange={(e) =>
+                  setAdoptionRange({ ...adoptionRange, from: e.target.value })
+                }
+                className="ml-auto px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              />
+              <input
+                type="date"
+                value={adoptionRange.to}
+                onChange={(e) =>
+                  setAdoptionRange({ ...adoptionRange, to: e.target.value })
+                }
+                className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+              />
+              <button
+                onClick={fetchAdoptionReports}
+                className="px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+              >
+                Filter
+              </button>
+              <button
+                onClick={handleExportAdoptions}
+                className="px-4 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 flex items-center text-sm"
+              >
+                <Download className="h-4 w-4 mr-1" /> Export
+              </button>
             </div>
           </div>
 
@@ -424,32 +415,27 @@ function ReportPage() {
             </h3>
           </div>
 
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-3 p-4">
-          <div className="flex flex-wrap items-center gap-3">
-
-            {/* Search */}
-            <input
-              type="text"
-              placeholder="Search by owner, service, status..."
-              value={appointmentSearch}
-              onChange={(e) => setAppointmentSearch(e.target.value)}
-              className="w-64 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-            />
-
-            {/* Status */}
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-gray-500 font-medium">
-                Status:
-              </span>
-              <StatusFilterButtons
-                value={appointmentStatusFilter}
-                onChange={setAppointmentStatusFilter}
-                options={["All", "Accepted", "Rejected"]}
-              />
-            </div>
-
-            {/* Date + Buttons (LEFT aligned) */}
+          <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-3 p-4">
             <div className="flex flex-wrap items-center gap-2">
+              <input
+                type="text"
+                placeholder="Search by owner, service, status..."
+                value={appointmentSearch}
+                onChange={(e) => setAppointmentSearch(e.target.value)}
+                className="w-64 px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+              />
+
+              {/* Status filter — between search and date pickers */}
+              <div className="flex items-center gap-1">
+                <span className="text-sm text-gray-500 font-medium">
+                  Status:
+                </span>
+                <StatusFilterButtons
+                  value={appointmentStatusFilter}
+                  onChange={setAppointmentStatusFilter}
+                  options={["All", "Accepted", "Rejected"]}
+                />
+              </div>
 
               <input
                 type="date"
@@ -460,9 +446,8 @@ function ReportPage() {
                     from: e.target.value,
                   })
                 }
-                className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
+                className="ml-auto px-3 py-2 border border-gray-300 rounded-lg text-sm"
               />
-
               <input
                 type="date"
                 value={appointmentRange.to}
@@ -474,26 +459,20 @@ function ReportPage() {
                 }
                 className="px-3 py-2 border border-gray-300 rounded-lg text-sm"
               />
-
               <button
                 onClick={fetchAppointmentReports}
                 className="px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
               >
                 Filter
               </button>
-
               <button
                 onClick={handleExportAppointments}
                 className="px-4 py-2.5 bg-gray-900 text-white rounded-lg hover:bg-gray-800 flex items-center text-sm"
               >
-                <Download className="h-4 w-4 mr-1" />
-                Export
+                <Download className="h-4 w-4 mr-1" /> Export
               </button>
-
             </div>
-
           </div>
-        </div>
 
           <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-auto max-h-[300px]">
             <table className="w-full">

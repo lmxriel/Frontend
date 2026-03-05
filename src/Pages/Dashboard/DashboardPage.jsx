@@ -158,7 +158,7 @@ function DashboardPage() {
                   Admin Dashboard
                 </h2>
                 <p className="text-sm text-gray-600">
-                  PawfectCare overview & quick actions
+                  Pawfect Care overview & quick actions
                 </p>
               </div>
             </div>

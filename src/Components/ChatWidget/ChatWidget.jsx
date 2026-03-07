@@ -17,13 +17,19 @@ function ChatWidget() {
   const [unreadCount, setUnreadCount] = useState(0);
   const messagesEndRef = useRef(null);
 
+  // Keep a ref of isOpen so socket handlers never have a stale closure
+  const isOpenRef = useRef(isOpen);
+  useEffect(() => {
+    isOpenRef.current = isOpen;
+  }, [isOpen]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
   useEffect(scrollToBottom, [messages]);
 
-  // Silent init: only if user is logged in
+  // Silent init: fetch conversation + initial unread count
   useEffect(() => {
     if (!user) return;
 
@@ -33,9 +39,8 @@ function ChatWidget() {
         setConversation(convRes.data);
         socket.emit("join_conversation", convRes.data.conversation_id);
 
-        // Initial unseen ADMIN messages
         const msgRes = await apiClient.get(
-          `/conversations/${convRes.data.conversation_id}/messages`
+          `/conversations/${convRes.data.conversation_id}/messages`,
         );
         const messagesData = msgRes.data || [];
         setMessages(messagesData);
@@ -63,7 +68,7 @@ function ChatWidget() {
     };
   }, [apiClient, user]);
 
-  // Load + mark read: only when chat is open AND user exists
+  // Load messages + mark read whenever the chat is opened
   useEffect(() => {
     if (!isOpen || !conversation || !user) return;
 
@@ -73,20 +78,20 @@ function ChatWidget() {
       try {
         setLoading(true);
         const msgRes = await apiClient.get(
-          `/conversations/${conversation.conversation_id}/messages`
+          `/conversations/${conversation.conversation_id}/messages`,
         );
         if (cancelled) return;
         const messagesData = msgRes.data || [];
         setMessages(messagesData);
 
         await apiClient.post(
-          `/conversations/${conversation.conversation_id}/read`
+          `/conversations/${conversation.conversation_id}/read`,
         );
         if (cancelled) return;
         setMessages((prev) =>
           prev.map((m) =>
-            m.sender_id !== user?.user_id ? { ...m, is_read: 1 } : m
-          )
+            m.sender_id !== user?.user_id ? { ...m, is_read: 1 } : m,
+          ),
         );
         setHasUnreadMessages(false);
         setUnreadCount(0);
@@ -104,7 +109,7 @@ function ChatWidget() {
     };
   }, [isOpen, conversation, apiClient, user]);
 
-  // Global socket listeners
+  // Socket listeners — use isOpenRef to avoid stale closure on isOpen
   useEffect(() => {
     if (!conversation || !user) return;
 
@@ -119,11 +124,25 @@ function ChatWidget() {
       const role = (msg.sender_role || "").toLowerCase();
       const isAdminSender = role === "admin";
 
-      setMessages((prev) => [...prev, msg]);
+      // Append the message, deduplicating by message_id
+      setMessages((prev) => {
+        const exists = prev.some((m) => m.message_id === msg.message_id);
+        return exists ? prev : [...prev, msg];
+      });
 
-      if (!isOpen && isAdminSender) {
+      // Only badge-up if chat is closed AND it's an admin message
+      // isOpenRef.current avoids the stale closure that caused messages
+      // to not appear until refresh
+      if (!isOpenRef.current && isAdminSender) {
         setHasUnreadMessages(true);
         setUnreadCount((c) => c + 1);
+      }
+
+      // If chat IS open and this is an admin message, mark it read immediately
+      if (isOpenRef.current && isAdminSender) {
+        apiClient
+          .post(`/conversations/${conversation.conversation_id}/read`)
+          .catch(() => {});
       }
     });
 
@@ -143,8 +162,8 @@ function ChatWidget() {
       if (data.conversationId !== conversation.conversation_id) return;
       setMessages((prev) =>
         prev.map((m) =>
-          m.sender_id === user?.user_id ? { ...m, is_read: 1 } : m
-        )
+          m.sender_id === user?.user_id ? { ...m, is_read: 1 } : m,
+        ),
       );
     });
 
@@ -154,7 +173,9 @@ function ChatWidget() {
       socket.off("stop_typing");
       socket.off("messages_read");
     };
-  }, [conversation, isOpen, user]);
+  }, [conversation, user, apiClient]);
+  // NOTE: isOpen intentionally removed from deps — we use isOpenRef instead
+  // to prevent re-registering socket handlers every time the chat opens/closes
 
   const getLastUserMessageId = () => {
     const userMessages = messages.filter((m) => {
@@ -197,7 +218,7 @@ function ChatWidget() {
     try {
       await apiClient.post(
         `/conversations/${conversation.conversation_id}/messages`,
-        { content }
+        { content },
       );
     } catch (err) {
       console.error("Send message error:", err);
@@ -228,7 +249,7 @@ function ChatWidget() {
           bg-gradient-to-br from-[#560705] to-[#703736] text-white shadow-2xl
           hover:from-[#703736] hover:to-[#560705] active:scale-95
           transition-all duration-200 flex items-center justify-center
-          border-2 border-white/20 md:bottom-4 md:right-4  ${
+          border-2 border-white/20 md:bottom-4 md:right-4 ${
             hasUnreadMessages ? "ring-4 ring-red-400/50 animate-pulse" : ""
           }`}
         aria-label="Toggle chat"
@@ -262,7 +283,6 @@ function ChatWidget() {
                 <span className="font-semibold text-white text-base block">
                   Chat with Admin
                 </span>
-                <span className="text-[#F3D6B7]/80 text-sm">Online</span>
               </div>
             </div>
             <button
@@ -298,9 +318,7 @@ function ChatWidget() {
                   return (
                     <div key={m.message_id} className="space-y-1.5">
                       <div
-                        className={`flex ${
-                          isMe ? "justify-end" : "justify-start"
-                        }`}
+                        className={`flex ${isMe ? "justify-end" : "justify-start"}`}
                       >
                         <div
                           className={`max-w-[85%] lg:max-w-[70%] px-4 py-3 rounded-2xl shadow-md text-sm transition-all ${
@@ -315,9 +333,7 @@ function ChatWidget() {
 
                       {isLastMine && (
                         <div
-                          className={`flex ${
-                            isMe ? "justify-end" : "justify-start"
-                          }`}
+                          className={`flex ${isMe ? "justify-end" : "justify-start"}`}
                         >
                           <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-white/60 backdrop-blur-sm shadow-sm">
                             {m.is_read ? "Seen" : "Sent"}

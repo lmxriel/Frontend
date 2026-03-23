@@ -67,11 +67,8 @@ function MessagesPage() {
   const [isUserTyping, setIsUserTyping] = useState(false);
   const [unreadCounts, setUnreadCounts] = useState({});
   const [searchQuery, setSearchQuery] = useState("");
-  const [onlineUsers, setOnlineUsers] = useState(new Set()); // track truly online user IDs
+  const [onlineUsers, setOnlineUsers] = useState(new Set());
 
-  // Stable display order — only updated when no conversation is open,
-  // or when a new unread message arrives (to bump that conv to top).
-  // Never re-sorted just because we cleared unread on click.
   const [displayOrder, setDisplayOrder] = useState([]);
 
   const messagesEndRef = useRef(null);
@@ -99,7 +96,6 @@ function MessagesPage() {
         return next;
       });
     });
-    // Server may emit a bulk presence list on connect
     socket.on("online_users", (userIds) => {
       setOnlineUsers(new Set(userIds));
     });
@@ -125,7 +121,6 @@ function MessagesPage() {
       });
       setUnreadCounts(initial);
 
-      // Set initial stable display order
       setDisplayOrder(sortConversations(convList, initial));
 
       convList.forEach((c) => {
@@ -139,6 +134,9 @@ function MessagesPage() {
     }
   };
 
+  // FIX: fetchMessages no longer clears the badge itself.
+  // Badge is cleared here only after /read succeeds, preventing
+  // the conversation from being prematurely marked as read.
   const fetchMessages = async (conversationId) => {
     try {
       setLoadingMessages(true);
@@ -146,12 +144,20 @@ function MessagesPage() {
         `/conversations/${conversationId}/messages`,
       );
       setMessages(Array.isArray(res.data) ? res.data : []);
+
+      // Only mark read + clear badge after the POST succeeds
       await apiClient.post(`/conversations/${conversationId}/read`);
+
       setMessages((prev) =>
         prev.map((m) =>
           m.sender_id !== user?.user_id ? { ...m, is_read: 1 } : m,
         ),
       );
+
+      // FIX: Clear badge here (after confirmed read) instead of in
+      // handleSelectConversation so the unread highlight is visible
+      // until the admin actually opens the conversation.
+      setUnreadCounts((prev) => ({ ...prev, [conversationId]: 0 }));
     } catch (err) {
       console.error("Fetch messages error:", err);
       setMessages([]);
@@ -160,20 +166,18 @@ function MessagesPage() {
     }
   };
 
-  // Global socket: handle new messages from users
-  useEffect(() => {
-    if (!user) return;
-
-    const handleNewMessage = (msg) => {
+  // Stable handler via useCallback so the same function reference is
+  // always passed to socket.on/off, preventing listener stacking.
+  const handleNewMessage = useCallback(
+    (msg) => {
       const role = (msg.sender_role || "").toLowerCase();
       const isFromUser = role === "pet owner";
-      const isFromAdmin = role === "admin";
 
       setSelectedConversation((currentSelected) => {
         if (currentSelected?.conversation_id === msg.conversation_id) {
-          // This conversation is open — append message for both admin and user messages
+          // Conversation is open — append message
           if (isFromUser) {
-            // Mark user message as read immediately since the chat is open
+            // Mark read immediately since chat is open
             apiClient
               .post(`/conversations/${msg.conversation_id}/read`)
               .catch(() => {});
@@ -215,24 +219,29 @@ function MessagesPage() {
 
         return currentSelected;
       });
-    };
+    },
+    [apiClient],
+  );
 
+  // Global socket: handle new messages from users.
+  // Uses the stable handleNewMessage ref so cleanup reliably removes
+  // the correct listener and never stacks duplicates.
+  useEffect(() => {
+    if (!user) return;
     socket.on("new_message", handleNewMessage);
     return () => socket.off("new_message", handleNewMessage);
-  }, [user, apiClient]);
+  }, [user, handleNewMessage]);
 
   const handleSelectConversation = (conv) => {
-    // Freeze display order BEFORE clearing unread count.
-    // We snapshot the current displayOrder so clearing the badge
-    // doesn't trigger a re-sort that moves this conv to the bottom.
-    // The order only changes again when a genuinely new message arrives.
-    setDisplayOrder((prev) => [...prev]); // keep as-is (already frozen)
+    // Keep display order stable — don't re-sort on selection
+    setDisplayOrder((prev) => [...prev]);
 
     setSelectedConversation(conv);
-    fetchMessages(conv.conversation_id);
 
-    // Clear badge without re-sorting
-    setUnreadCounts((prev) => ({ ...prev, [conv.conversation_id]: 0 }));
+    // FIX: No longer clearing unreadCounts here.
+    // It is now cleared inside fetchMessages after /read succeeds,
+    // so the sidebar badge stays visible until the admin opens the chat.
+    fetchMessages(conv.conversation_id);
 
     socket.emit("join_conversation", conv.conversation_id);
     socket.off("typing");
@@ -308,7 +317,6 @@ function MessagesPage() {
   };
   const lastAdminMessageId = getLastAdminMessageId();
 
-  // Use displayOrder for rendering (stable), but pull fresh data from conversations map
   const convMap = Object.fromEntries(
     conversations.map((c) => [c.conversation_id, c]),
   );
@@ -409,7 +417,7 @@ function MessagesPage() {
                         `}
                         style={{ width: "calc(100% - 8px)" }}
                       >
-                        {/* Avatar — online dot only for truly online users */}
+                        {/* Avatar */}
                         <div className="relative flex-shrink-0">
                           <div
                             className={`w-12 h-12 rounded-full ${color} flex items-center justify-center text-white font-semibold text-sm shadow-sm`}
@@ -471,7 +479,7 @@ function MessagesPage() {
             <div className="flex-1 flex flex-col min-w-0">
               {selectedConversation ? (
                 <>
-                  {/* Chat header — no hardcoded "Active now" */}
+                  {/* Chat header */}
                   <div className="px-5 py-3 border-b border-gray-200 flex items-center gap-3 bg-white">
                     {(() => {
                       const name =

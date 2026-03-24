@@ -6,6 +6,14 @@ import LoadingModal from "../../Components/Modals/LoadingModal";
 import EmailSentModal from "../../Components/Modals/EmailSentModal";
 import { useAuth } from "../../Components/ServiceLayer/Context/authContext";
 
+const toPascalCase = (str) => {
+  return (str || "")
+    .toLowerCase()
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+};
+
 function AppointmentPage() {
   const navigate = useNavigate();
   const [appointments, setAppointments] = useState([]);
@@ -272,14 +280,7 @@ function AppointmentPage() {
                       >
                         <td className="px-6 py-4">
                           <span className="font-medium text-gray-900">
-                            {appt.first_name
-                              ? appt.first_name.charAt(0).toUpperCase() +
-                                appt.first_name.slice(1).toLowerCase()
-                              : ""}{" "}
-                            {appt.last_name
-                              ? appt.last_name.charAt(0).toUpperCase() +
-                                appt.last_name.slice(1).toLowerCase()
-                              : ""}
+                            {toPascalCase(`${appt.first_name} ${appt.last_name}`)}
                           </span>
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-700">
@@ -302,7 +303,7 @@ function AppointmentPage() {
                           })}
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-700">
-                          {appt.appointment_type.charAt(0).toUpperCase() + appt.appointment_type.slice(1)}
+                          {toPascalCase(appt.appointment_type)}
                         </td>
 
                         <td className="px-6 py-4">
@@ -397,8 +398,7 @@ function AppointmentPage() {
                         Owner Name
                       </p>
                       <p className="text-base text-gray-900">
-                        {selectedAppointment.first_name}{" "}
-                        {selectedAppointment.last_name}
+                        {toPascalCase(`${selectedAppointment.first_name} ${selectedAppointment.last_name}`)}
                       </p>
                     </div>
                     <div>
@@ -406,7 +406,7 @@ function AppointmentPage() {
                         Service Type
                       </p>
                       <p className="text-base text-gray-900">
-                        {selectedAppointment.appointment_type}
+                        {toPascalCase(selectedAppointment.appointment_type)}
                       </p>
                     </div>
                   </div>

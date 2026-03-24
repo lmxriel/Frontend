@@ -6,6 +6,14 @@ import EmailSentModal from "../../Components/Modals/EmailSentModal";
 import LoadingModal from "../../Components/Modals/LoadingModal";
 import { useAuth } from "../../Components/ServiceLayer/Context/authContext";
 
+const toPascalCase = (str) => {
+  return (str || "")
+    .toLowerCase()
+    .split(" ")
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+};
+
 function AdoptionRequest() {
   const navigate = useNavigate();
   const [requests, setRequests] = useState([]);
@@ -29,7 +37,7 @@ function AdoptionRequest() {
         pet_id: item.pet_id,
         user_id: item.user_id,
         email: item.email,
-        adopterName: item.adopter_name,
+        adopterName: toPascalCase(item.adopter_name),
         petName: item.name,
         dateRequested: item.dateRequested,
         dateAdopted: item.dateAdopted,
@@ -275,7 +283,7 @@ function AdoptionRequest() {
                       >
                         <td className="px-6 py-4">
                           <span className="font-medium text-gray-900">
-                            {req.adopterName}
+                            {toPascalCase(req.adopterName)}
                           </span>
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-700">
@@ -397,7 +405,7 @@ function AdoptionRequest() {
                         Adopter Name
                       </p>
                       <p className="text-base text-gray-900">
-                        {selectedRequest.adopterName}
+                       {toPascalCase(selectedRequest.adopterName)}
                       </p>
                     </div>
                     <div>

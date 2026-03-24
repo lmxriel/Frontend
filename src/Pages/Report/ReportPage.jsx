@@ -201,7 +201,7 @@ const filteredAppointments = appointmentReports
     const columns = ["Owner Name", "Service", "Date", "Time", "Status"];
     const rows = filteredAppointments.map((a) => [
       toPascalCase(`${a.first_name || ""} ${a.last_name || ""}`),
-      a.appointment_type || "N/A",
+      toPascalCase(a.appointment_type) || "N/A",
       formatDate(a.appointment_date),
       a.timeSchedule
         ? new Date(`1970-01-01T${a.timeSchedule}`).toLocaleTimeString("en-US", {
@@ -519,7 +519,7 @@ const filteredAppointments = appointmentReports
                       <td className="px-6 py-2">
                         {toPascalCase(`${appt.first_name || ""} ${appt.last_name || ""}`)}
                       </td>
-                      <td className="px-6 py-2">{appt.appointment_type}</td>
+                      <td className="px-6 py-2">{toPascalCase(appt.appointment_type)}</td>
                       <td className="px-6 py-2 whitespace-nowrap">
                         {formatDate(appt.appointment_date)}
                       </td>

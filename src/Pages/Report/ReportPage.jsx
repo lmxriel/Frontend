@@ -99,7 +99,8 @@ function ReportPage() {
     return matchesSearch && matchesStatus;
   });
 
-  const filteredAppointments = appointmentReports.filter((a) => {
+const filteredAppointments = appointmentReports
+  .filter((a) => {
     const fullName = `${a.first_name || ""} ${a.last_name || ""}`.toLowerCase();
     const service = (a.appointment_type || "").toLowerCase();
     const status = (a.status || "").toLowerCase();
@@ -112,10 +113,12 @@ function ReportPage() {
 
     const matchesStatus =
       appointmentStatusFilter === "All" ||
-      (a.status || "").toLowerCase() === appointmentStatusFilter.toLowerCase();
+      (a.status || "").toLowerCase() ===
+        appointmentStatusFilter.toLowerCase();
 
     return matchesSearch && matchesStatus;
-  });
+  })
+  .sort((a, b) => new Date(a.appointment_date) - new Date(b.appointment_date)); 
 
   const addPdfHeader = (doc, title) => {
     try {

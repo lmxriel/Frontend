@@ -80,7 +80,8 @@ function ReportPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [token]);
 
-  const filteredAdoptions = adoptionReports.filter((report) => {
+const filteredAdoptions = adoptionReports
+  .filter((report) => {
     const fullName =
       `${report.adopter_first_name || ""} ${report.adopter_last_name || ""}`.toLowerCase();
     const petName = (report.pet_name || "").toLowerCase();
@@ -106,7 +107,8 @@ function ReportPage() {
         adoptionStatusFilter.toLowerCase();
 
     return matchesSearch && matchesStatus;
-  });
+  })
+  .sort((a, b) => new Date(a.dateRequested) - new Date(b.dateRequested));
 
 const filteredAppointments = appointmentReports
   .filter((a) => {

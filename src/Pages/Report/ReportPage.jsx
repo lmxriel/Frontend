@@ -9,6 +9,15 @@ import jsPDF from "jspdf";
 import autoTable from "jspdf-autotable";
 import logo from "../../assets/Admin-Page-Image/OVSLogo.png";
 
+const toPascalCase = (text = "") => {
+  return text
+    .toLowerCase()
+    .split(" ")
+    .filter(Boolean)
+    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(" ");
+};
+
 function ReportPage() {
   const navigate = useNavigate();
   const [adoptionReports, setAdoptionReports] = useState([]);
@@ -163,8 +172,7 @@ const filteredAppointments = appointmentReports
       "Status",
     ];
     const rows = filteredAdoptions.map((r) => [
-      `${r.adopter_first_name || ""} ${r.adopter_last_name || ""}`.trim() ||
-        "N/A",
+      toPascalCase(`${r.adopter_first_name || ""} ${r.adopter_last_name || ""}`) || "N/A",
       r.pet_name || "N/A",
       r.pet_breed || "N/A",
       r.pet_type || "N/A",
@@ -192,7 +200,7 @@ const filteredAppointments = appointmentReports
 
     const columns = ["Owner Name", "Service", "Date", "Time", "Status"];
     const rows = filteredAppointments.map((a) => [
-      `${a.first_name || ""} ${a.last_name || ""}`.trim(),
+      toPascalCase(`${a.first_name || ""} ${a.last_name || ""}`),
       a.appointment_type || "N/A",
       formatDate(a.appointment_date),
       a.timeSchedule
@@ -381,7 +389,9 @@ const filteredAppointments = appointmentReports
                       key={report.adoption_id || index}
                       className="hover:bg-gray-50"
                     >
-                      <td className="px-6 py-2">{`${report.adopter_first_name || ""} ${report.adopter_last_name || ""}`}</td>
+                      <td className="px-6 py-2">
+                        {toPascalCase(`${report.adopter_first_name || ""} ${report.adopter_last_name || ""}`)}
+                      </td>
                       <td className="px-6 py-2">{report.pet_name || "N/A"}</td>
                       <td className="px-6 py-2">{report.pet_breed || "N/A"}</td>
                       <td className="px-6 py-2">{report.pet_type || "N/A"}</td>
@@ -506,7 +516,9 @@ const filteredAppointments = appointmentReports
                 ) : (
                   filteredAppointments.map((appt) => (
                     <tr key={appt.appointment_id} className="hover:bg-gray-50">
-                      <td className="px-6 py-2">{`${appt.first_name || ""} ${appt.last_name || ""}`}</td>
+                      <td className="px-6 py-2">
+                        {toPascalCase(`${appt.first_name || ""} ${appt.last_name || ""}`)}
+                      </td>
                       <td className="px-6 py-2">{appt.appointment_type}</td>
                       <td className="px-6 py-2 whitespace-nowrap">
                         {formatDate(appt.appointment_date)}

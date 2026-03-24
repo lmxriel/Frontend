@@ -200,7 +200,7 @@ const filteredAppointments = appointmentReports
       appointmentStatusFilter !== "All" ? ` (${appointmentStatusFilter})` : "";
     addPdfHeader(doc, `Appointment Report${filterLabel}`);
 
-    const columns = ["Owner Name", "Service", "Date", "Time", "Status"];
+    const columns = ["Pet Owner Name", "Service", "Date", "Time", "Status"];
     const rows = filteredAppointments.map((a) => [
       toPascalCase(`${a.first_name || ""} ${a.last_name || ""}`),
       toPascalCase(a.appointment_type) || "N/A",

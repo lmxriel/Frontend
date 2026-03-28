@@ -74,6 +74,11 @@ function UserRegistrationPage() {
       return;
     }
 
+    if (formData.password.length < 6) {
+      setError("Password must be at least 6 characters long.");
+      return;
+    }
+
     if (formData.password !== formData.confirmPassword) {
       setError("Passwords do not match!");
       return;
@@ -306,9 +311,10 @@ function UserRegistrationPage() {
                 type={showPassword ? "text" : "password"}
                 name="password"
                 autoComplete="new-password"
+                minLength={6}
                 value={formData.password}
                 onChange={handleChange}
-                placeholder="Create a password"
+                placeholder="Create a password (min. 6 characters)"
                 className="w-full px-3 sm:px-4 py-2.5 sm:py-3 border-2 border-amber-200 rounded-xl pr-10 sm:pr-12 focus:ring-2 focus:ring-amber-400 focus:border-amber-400 outline-none transition text-sm sm:text-base"
                 required
               />
@@ -320,6 +326,11 @@ function UserRegistrationPage() {
                 {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
               </button>
             </div>
+            {formData.password.length > 0 && formData.password.length < 6 && (
+              <p className="text-xs text-red-500 mt-1.5">
+                Password must be at least 6 characters.
+              </p>
+            )}
           </div>
 
           {/* Confirm Password */}
@@ -415,6 +426,7 @@ function UserRegistrationPage() {
       {showTermsModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
           <div className="bg-white rounded-2xl max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto p-6 md:p-8 shadow-xl">
+
             <h2 className="text-2xl font-semibold text-amber-900 mb-2 text-center">
               Pawfect Care — Data Privacy Agreement
             </h2>
@@ -547,7 +559,7 @@ function UserRegistrationPage() {
                   7. Consent
                 </h3>
                 <p className="mb-1">
-                  By clicking “I Agree”, you acknowledge that:
+                  By clicking "I Agree", you acknowledge that:
                 </p>
                 <ul className="list-disc list-inside ml-2 space-y-0.5">
                   <li>
@@ -557,7 +569,7 @@ function UserRegistrationPage() {
                     You consent to the collection and use of your information as
                     described
                   </li>
-                  <li>You agree to comply with the system’s policies</li>
+                  <li>You agree to comply with the system's policies</li>
                 </ul>
               </div>
 

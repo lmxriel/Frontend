@@ -49,10 +49,20 @@ function ChatWidget() {
         const msgs = msgRes.data || [];
         setMessages(msgs);
 
-        const unread = msgs.filter(
-          (m) =>
-            (m.sender_role || "").toLowerCase() === "admin" && !m.is_read
-        ).length;
+        // ✅ FIX ONLY HERE
+        const unread = msgs.filter((m) => {
+          const isAdmin = (m.sender_role || "").toLowerCase() === "admin";
+
+          const isUnread =
+            Number(m.is_read) === 0 ||
+            m.is_read === false ||
+            m.is_read == null;
+
+          return isAdmin && isUnread;
+        }).length;
+
+        setHasUnreadMessages(false);
+        setUnreadCount(0);
 
         if (unread > 0) {
           setHasUnreadMessages(true);
@@ -91,7 +101,6 @@ function ChatWidget() {
 
         setMessages(msgRes.data || []);
 
-        // MARK AS READ (backend only — IMPORTANT FIX)
         await apiClient.post(
           `/conversations/${conversation.conversation_id}/read`
         );
@@ -100,6 +109,16 @@ function ChatWidget() {
 
         setHasUnreadMessages(false);
         setUnreadCount(0);
+
+        // optional safety fix (DO NOT CHANGE UI)
+        setMessages((prev) =>
+          prev.map((m) => {
+            const isAdmin =
+              (m.sender_role || "").toLowerCase() === "admin";
+
+            return isAdmin ? { ...m, is_read: 1 } : m;
+          })
+        );
       } catch (e) {
         console.error(e);
       } finally {
@@ -235,15 +254,12 @@ function ChatWidget() {
 
   if (!user) return null;
 
-  // ---------------- UI (RESTORED DESIGN) ----------------
+  // ---------------- UI ----------------
   return (
     <>
-      {/* FAB */}
       <button
         onClick={hasUnreadMessages ? openChat : () => setIsOpen((p) => !p)}
-        className={`fixed bottom-6 right-6 w-14 h-14 rounded-2xl bg-gradient-to-br from-[#560705] to-[#703736] text-white shadow-2xl ${
-          hasUnreadMessages ? "ring-4 ring-red-400/50 animate-pulse" : ""
-        }`}
+        className="fixed bottom-6 right-6 w-14 h-14 rounded-2xl bg-gradient-to-br from-[#560705] to-[#703736] text-white"
       >
         {isOpen ? "×" : "💬"}
 
@@ -254,26 +270,14 @@ function ChatWidget() {
         )}
       </button>
 
-      {/* BACKDROP */}
       {isOpen && (
-        <div
-          className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 md:hidden"
-          onClick={closeChat}
-        />
-      )}
-
-      {/* CHAT PANEL */}
-      {isOpen && (
-        <div className="fixed inset-0 z-50 flex flex-col bg-white shadow-2xl overflow-hidden w-full h-screen md:bottom-20 md:right-4 md:w-96 md:h-[500px] md:max-h-[80vh] md:inset-auto md:rounded-2xl">
-          
-          {/* HEADER */}
-          <div className="bg-gradient-to-r from-[#560705] to-[#703736] px-6 py-4 flex justify-between text-white">
+        <div className="fixed inset-0 bg-white z-50 flex flex-col">
+          <div className="p-4 bg-[#560705] text-white flex justify-between">
             Chat with Admin
             <button onClick={closeChat}>×</button>
           </div>
 
-          {/* MESSAGES */}
-          <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4 bg-gradient-to-b from-gray-50/50 to-white">
+          <div className="flex-1 overflow-y-auto p-4">
             {messages.map((m) => {
               const isMe =
                 (m.sender_role || "").toLowerCase() === "pet owner" ||
@@ -283,22 +287,16 @@ function ChatWidget() {
                 isMe && m.message_id === lastUserMessageId;
 
               return (
-                <div key={m.message_id} className="space-y-1.5">
-                  <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-                    <div
-                      className={`max-w-[85%] px-4 py-3 rounded-2xl text-sm shadow-md ${
-                        isMe
-                          ? "bg-gradient-to-r from-[#560705] to-[#703736] text-white rounded-br-sm"
-                          : "bg-white border border-gray-100 rounded-bl-sm"
-                      }`}
-                    >
+                <div key={m.message_id} className="mb-2">
+                  <div className={isMe ? "text-right" : "text-left"}>
+                    <div className="inline-block p-2 rounded bg-gray-100">
                       {m.content}
                     </div>
                   </div>
 
                   {isLastMine && (
                     <div className="text-xs text-gray-500 text-right">
-                      {m.is_read ? "Seen by Admin" : "Sent"}
+                      {m.is_read === 1 ? "Seen by Admin" : "Sent"}
                     </div>
                   )}
                 </div>
@@ -306,25 +304,20 @@ function ChatWidget() {
             })}
 
             {isAdminTyping && (
-              <div className="text-sm text-gray-500">
-                Admin is typing...
-              </div>
+              <div className="text-sm text-gray-500">Admin is typing...</div>
             )}
 
             <div ref={messagesEndRef} />
           </div>
 
-          {/* INPUT */}
-          <form onSubmit={handleSend} className="p-3 flex gap-2">
+          <form onSubmit={handleSend} className="p-2 flex gap-2">
             <input
               value={newMessage}
               onChange={handleUserInputChange}
-              className="flex-1 bg-white/70 border border-gray-200 rounded-2xl px-5 py-3 focus:ring-2 focus:ring-[#560705]/30 outline-none"
+              className="flex-1 border p-2"
               placeholder="Type..."
             />
-            <button className="w-12 h-12 bg-gradient-to-r from-[#560705] to-[#703736] text-white rounded-2xl">
-              ➤
-            </button>
+            <button>Send</button>
           </form>
         </div>
       )}

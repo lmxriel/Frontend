@@ -7,7 +7,6 @@ let userTypingTimeout = null;
 
 function ChatWidget() {
   const { apiClient, user } = useAuth();
-
   const [isOpen, setIsOpen] = useState(false);
   const [conversation, setConversation] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -16,10 +15,10 @@ function ChatWidget() {
   const [isAdminTyping, setIsAdminTyping] = useState(false);
   const [hasUnreadMessages, setHasUnreadMessages] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-
   const messagesEndRef = useRef(null);
-  const isOpenRef = useRef(isOpen);
 
+  // Keep a ref of isOpen so socket handlers never have a stale closure
+  const isOpenRef = useRef(isOpen);
   useEffect(() => {
     isOpenRef.current = isOpen;
   }, [isOpen]);
@@ -30,50 +29,36 @@ function ChatWidget() {
 
   useEffect(scrollToBottom, [messages]);
 
-  // ---------------- INIT ----------------
+  // Silent init: fetch conversation + initial unread count
   useEffect(() => {
     if (!user) return;
 
-    const init = async () => {
+    const initSilent = async () => {
       try {
         const convRes = await apiClient.get("/conversations/me");
-        const conv = convRes.data;
-
-        setConversation(conv);
-        socket.emit("join_conversation", conv.conversation_id);
+        setConversation(convRes.data);
+        socket.emit("join_conversation", convRes.data.conversation_id);
 
         const msgRes = await apiClient.get(
-          `/conversations/${conv.conversation_id}/messages`
+          `/conversations/${convRes.data.conversation_id}/messages`,
         );
+        const messagesData = msgRes.data || [];
+        setMessages(messagesData);
 
-        const msgs = msgRes.data || [];
-        setMessages(msgs);
-
-        // ✅ FIX ONLY HERE
-        const unread = msgs.filter((m) => {
-          const isAdmin = (m.sender_role || "").toLowerCase() === "admin";
-
-          const isUnread =
-            Number(m.is_read) === 0 ||
-            m.is_read === false ||
-            m.is_read == null;
-
-          return isAdmin && isUnread;
+        const initialUnreadFromAdmin = messagesData.filter((m) => {
+          const role = (m.sender_role || "").toLowerCase();
+          return role === "admin" && !m.is_read;
         }).length;
 
-        setHasUnreadMessages(false);
-        setUnreadCount(0);
-
-        if (unread > 0) {
+        if (initialUnreadFromAdmin > 0) {
           setHasUnreadMessages(true);
-          setUnreadCount(unread);
+          setUnreadCount(initialUnreadFromAdmin);
         }
       } catch (e) {
-        console.error("Init error:", e);
+        console.error("Silent chat init error:", e);
       }
     };
-
-    init();
+    initSilent();
 
     return () => {
       socket.off("new_message");
@@ -83,57 +68,48 @@ function ChatWidget() {
     };
   }, [apiClient, user]);
 
-  // ---------------- LOAD + MARK READ ----------------
+  // Load messages + mark read whenever the chat is opened
   useEffect(() => {
     if (!isOpen || !conversation || !user) return;
 
     let cancelled = false;
 
-    const load = async () => {
+    const loadMessages = async () => {
       try {
         setLoading(true);
-
         const msgRes = await apiClient.get(
-          `/conversations/${conversation.conversation_id}/messages`
+          `/conversations/${conversation.conversation_id}/messages`,
         );
-
         if (cancelled) return;
-
-        setMessages(msgRes.data || []);
+        const messagesData = msgRes.data || [];
+        setMessages(messagesData);
 
         await apiClient.post(
-          `/conversations/${conversation.conversation_id}/read`
+          `/conversations/${conversation.conversation_id}/read`,
         );
-
         if (cancelled) return;
-
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.sender_id !== user?.user_id ? { ...m, is_read: 1 } : m,
+          ),
+        );
         setHasUnreadMessages(false);
         setUnreadCount(0);
-
-        // optional safety fix (DO NOT CHANGE UI)
-        setMessages((prev) =>
-          prev.map((m) => {
-            const isAdmin =
-              (m.sender_role || "").toLowerCase() === "admin";
-
-            return isAdmin ? { ...m, is_read: 1 } : m;
-          })
-        );
-      } catch (e) {
-        console.error(e);
+      } catch (err) {
+        if (!cancelled) console.error("Chat open load error:", err);
       } finally {
         if (!cancelled) setLoading(false);
       }
     };
 
-    load();
+    loadMessages();
 
     return () => {
       cancelled = true;
     };
   }, [isOpen, conversation, apiClient, user]);
 
-  // ---------------- SOCKETS ----------------
+  // Socket listeners — use isOpenRef to avoid stale closure on isOpen
   useEffect(() => {
     if (!conversation || !user) return;
 
@@ -148,38 +124,46 @@ function ChatWidget() {
       const role = (msg.sender_role || "").toLowerCase();
       const isAdminSender = role === "admin";
 
+      // Append the message, deduplicating by message_id
       setMessages((prev) => {
         const exists = prev.some((m) => m.message_id === msg.message_id);
         return exists ? prev : [...prev, msg];
       });
 
+      // Only badge-up if chat is closed AND it's an admin message
+      // isOpenRef.current avoids the stale closure that caused messages
+      // to not appear until refresh
       if (!isOpenRef.current && isAdminSender) {
         setHasUnreadMessages(true);
         setUnreadCount((c) => c + 1);
+      }
+
+      // If chat IS open and this is an admin message, mark it read immediately
+      if (isOpenRef.current && isAdminSender) {
+        apiClient
+          .post(`/conversations/${conversation.conversation_id}/read`)
+          .catch(() => {});
       }
     });
 
     socket.on("typing", (data) => {
       if (data.conversationId !== conversation.conversation_id) return;
-      if ((data.sender_role || "").toLowerCase() === "admin") {
-        setIsAdminTyping(true);
-      }
+      const role = (data.sender_role || "").toLowerCase();
+      if (role === "admin") setIsAdminTyping(true);
     });
 
     socket.on("stop_typing", (data) => {
       if (data.conversationId !== conversation.conversation_id) return;
-      if ((data.sender_role || "").toLowerCase() === "admin") {
-        setIsAdminTyping(false);
-      }
+      const role = (data.sender_role || "").toLowerCase();
+      if (role === "admin") setIsAdminTyping(false);
     });
 
     socket.on("messages_read", (data) => {
       if (data.conversationId !== conversation.conversation_id) return;
-
       setMessages((prev) =>
         prev.map((m) =>
-          m.sender_id !== user.user_id ? { ...m, is_read: 1 } : m
-        )
+          m.sender_id === user?.user_id ? { ...m, is_read: 1 } : m,
+        ),
       );
     });
 
@@ -189,23 +173,21 @@ function ChatWidget() {
       socket.off("stop_typing");
       socket.off("messages_read");
     };
-  }, [conversation, user]);
+  }, [conversation, user, apiClient]);
+  // NOTE: isOpen intentionally removed from deps — we use isOpenRef instead
+  // to prevent re-registering socket handlers every time the chat opens/closes
 
-  // ---------------- HELPERS ----------------
   const getLastUserMessageId = () => {
-    const userMsgs = messages.filter((m) => {
+    const userMessages = messages.filter((m) => {
       const role = (m.sender_role || "").toLowerCase();
       return role === "pet owner" || m.sender_id === user?.user_id;
     });
-
-    return userMsgs.length
-      ? userMsgs[userMsgs.length - 1].message_id
-      : null;
+    if (userMessages.length === 0) return null;
+    return userMessages[userMessages.length - 1].message_id;
   };
 
   const lastUserMessageId = getLastUserMessageId();
 
-  // ---------------- INPUT ----------------
   const handleUserInputChange = (e) => {
     const value = e.target.value;
     setNewMessage(value);
@@ -217,7 +199,7 @@ function ChatWidget() {
       sender_role: "pet owner",
     });
 
-    clearTimeout(userTypingTimeout);
+    if (userTypingTimeout) clearTimeout(userTypingTimeout);
     userTypingTimeout = setTimeout(() => {
       socket.emit("stop_typing", {
         conversationId: conversation.conversation_id,
@@ -226,7 +208,6 @@ function ChatWidget() {
     }, TYPING_TIMEOUT_MS);
   };
 
-  // ---------------- SEND ----------------
   const handleSend = async (e) => {
     e.preventDefault();
     if (!newMessage.trim() || !conversation) return;
@@ -237,88 +218,172 @@ function ChatWidget() {
     try {
       await apiClient.post(
         `/conversations/${conversation.conversation_id}/messages`,
-        { content }
+        { content },
       );
-    } catch (e) {
-      console.error(e);
+    } catch (err) {
+      console.error("Send message error:", err);
     }
   };
 
+  const closeChat = () => {
+    setIsOpen(false);
+  };
+
   const openChat = () => {
+    if (!user) return;
     setIsOpen(true);
     setHasUnreadMessages(false);
     setUnreadCount(0);
   };
 
-  const closeChat = () => setIsOpen(false);
-
   if (!user) return null;
 
-  // ---------------- UI ----------------
   return (
     <>
+      {/* FAB Button */}
       <button
-        onClick={hasUnreadMessages ? openChat : () => setIsOpen((p) => !p)}
-        className="fixed bottom-6 right-6 w-14 h-14 rounded-2xl bg-gradient-to-br from-[#560705] to-[#703736] text-white"
+        onClick={
+          hasUnreadMessages ? openChat : () => setIsOpen((prev) => !prev)
+        }
+        className={`fixed bottom-6 right-6 z-50 w-14 h-14 rounded-2xl
+          bg-gradient-to-br from-[#560705] to-[#703736] text-white shadow-2xl
+          hover:from-[#703736] hover:to-[#560705] active:scale-95
+          transition-all duration-200 flex items-center justify-center
+          border-2 border-white/20 md:bottom-4 md:right-4 ${
+            hasUnreadMessages ? "ring-4 ring-red-400/50 animate-pulse" : ""
+          }`}
+        aria-label="Toggle chat"
       >
-        {isOpen ? "×" : "💬"}
-
         {hasUnreadMessages && unreadCount > 0 && (
-          <div className="absolute -top-1 -right-1 bg-red-500 text-xs rounded-full px-1">
+          <div className="absolute -top-1 -right-1 min-w-5 h-5 px-1 bg-red-500 rounded-full flex items-center justify-center text-[10px] font-bold text-white shadow-lg border-2 border-white">
             {unreadCount > 9 ? "9+" : unreadCount}
           </div>
         )}
+        {isOpen ? "×" : "💬"}
       </button>
 
+      {/* Backdrop for mobile */}
       {isOpen && (
-        <div className="fixed inset-0 bg-white z-50 flex flex-col">
-          <div className="p-4 bg-[#560705] text-white flex justify-between">
-            Chat with Admin
-            <button onClick={closeChat}>×</button>
+        <div
+          className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 md:hidden"
+          onClick={closeChat}
+        />
+      )}
+
+      {/* Chat Panel */}
+      {isOpen && (
+        <div className="fixed inset-0 z-50 flex flex-col bg-white shadow-2xl overflow-hidden w-full h-screen md:bottom-20 md:right-4 md:w-96 md:h-[500px] md:max-h-[80vh] md:inset-auto md:rounded-2xl">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-[#560705] to-[#703736] px-6 py-4 border-b border-[#560705]/20 flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-gradient-to-br from-amber-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg">
+                👤
+              </div>
+              <div>
+                <span className="font-semibold text-white text-base block">
+                  Chat with Admin
+                </span>
+              </div>
+            </div>
+            <button
+              onClick={closeChat}
+              className="p-2 text-white/70 hover:text-white hover:bg-white/20 rounded-xl transition"
+            >
+              ×
+            </button>
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4">
-            {messages.map((m) => {
-              const isMe =
-                (m.sender_role || "").toLowerCase() === "pet owner" ||
-                m.sender_id === user.user_id;
-
-              const isLastMine =
-                isMe && m.message_id === lastUserMessageId;
-
-              return (
-                <div key={m.message_id} className="mb-2">
-                  <div className={isMe ? "text-right" : "text-left"}>
-                    <div className="inline-block p-2 rounded bg-gray-100">
-                      {m.content}
-                    </div>
-                  </div>
-
-                  {isLastMine && (
-                    <div className="text-xs text-gray-500 text-right">
-                      {m.is_read === 1 ? "Seen by Admin" : "Sent"}
-                    </div>
-                  )}
+          {/* Body */}
+          {loading && !conversation ? (
+            <div className="flex-1 flex items-center justify-center p-8">
+              <div className="text-center">
+                <div className="w-12 h-12 bg-[#560705]/10 rounded-2xl flex items-center justify-center mx-auto mb-3">
+                  💬
                 </div>
-              );
-            })}
+                <span className="text-lg font-medium text-gray-700">
+                  Loading chat...
+                </span>
+              </div>
+            </div>
+          ) : (
+            <>
+              {/* Messages */}
+              <div className="flex-1 overflow-y-auto px-6 py-5 space-y-4 md:px-4 md:py-3 bg-gradient-to-b from-gray-50/50 to-white">
+                {messages.map((m) => {
+                  const role = (m.sender_role || "").toLowerCase();
+                  const isMe =
+                    role === "pet owner" || m.sender_id === user?.user_id;
+                  const isLastMine = isMe && m.message_id === lastUserMessageId;
 
-            {isAdminTyping && (
-              <div className="text-sm text-gray-500">Admin is typing...</div>
-            )}
+                  return (
+                    <div key={m.message_id} className="space-y-1.5">
+                      <div
+                        className={`flex ${isMe ? "justify-end" : "justify-start"}`}
+                      >
+                        <div
+                          className={`max-w-[85%] lg:max-w-[70%] px-4 py-3 rounded-2xl shadow-md text-sm transition-all ${
+                            isMe
+                              ? "bg-gradient-to-r from-[#560705] to-[#703736] text-white rounded-br-sm shadow-[#560705]/25"
+                              : "bg-white/80 backdrop-blur-sm border border-gray-100/50 rounded-bl-sm shadow-sm hover:shadow-md"
+                          }`}
+                        >
+                          {m.content}
+                        </div>
+                      </div>
 
-            <div ref={messagesEndRef} />
-          </div>
+                      {isLastMine && (
+                        <div
+                          className={`flex ${isMe ? "justify-end" : "justify-start"}`}
+                        >
+                          <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-white/60 backdrop-blur-sm shadow-sm">
+                            {m.is_read ? "Seen" : "Sent"}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
 
-          <form onSubmit={handleSend} className="p-2 flex gap-2">
-            <input
-              value={newMessage}
-              onChange={handleUserInputChange}
-              className="flex-1 border p-2"
-              placeholder="Type..."
-            />
-            <button>Send</button>
-          </form>
+                {isAdminTyping && (
+                  <div className="flex items-center space-x-2 px-1 py-3">
+                    <div className="flex space-x-1">
+                      <div className="w-2.5 h-2.5 bg-gray-400 rounded-full animate-bounce [animation-delay:0s]" />
+                      <div className="w-2.5 h-2.5 bg-gray-400 rounded-full animate-bounce [animation-delay:0.1s]" />
+                      <div className="w-2.5 h-2.5 bg-gray-400 rounded-full animate-bounce [animation-delay:0.2s]" />
+                    </div>
+                    <span className="text-sm text-gray-500 font-medium">
+                      Admin is typing…
+                    </span>
+                  </div>
+                )}
+
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* Input Form */}
+              <form
+                onSubmit={handleSend}
+                className="bg-white/50 backdrop-blur-sm border-t border-gray-200/50 px-6 py-4 md:px-4 md:py-3"
+              >
+                <div className="flex items-end space-x-3">
+                  <input
+                    type="text"
+                    value={newMessage}
+                    onChange={handleUserInputChange}
+                    placeholder="Type a message..."
+                    className="flex-1 bg-white/70 backdrop-blur-sm border border-gray-200/50 rounded-2xl px-5 py-3 text-base placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-[#560705]/30 focus:border-transparent shadow-sm resize-none min-h-[44px]"
+                  />
+                  <button
+                    type="submit"
+                    disabled={!newMessage.trim()}
+                    className="w-12 h-12 bg-gradient-to-r from-[#560705] to-[#703736] text-white rounded-2xl flex items-center justify-center shadow-lg hover:shadow-xl active:scale-95 disabled:opacity-50 disabled:shadow-md transition-all font-semibold flex-shrink-0"
+                  >
+                    ➤
+                  </button>
+                </div>
+              </form>
+            </>
+          )}
         </div>
       )}
     </>
